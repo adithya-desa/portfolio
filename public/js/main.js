@@ -403,7 +403,7 @@ function renderCerts(certs, achievements) {
   });
 }
 
-// ── Contact Form ──────────────────────────────────────────────────────────────
+// ── Contact Form (Zero-Password Direct to adithyadesa556@gmail.com) ───────────
 const form      = document.getElementById('contactForm');
 const formMsg   = document.getElementById('formMsg');
 const submitBtn = document.getElementById('submitBtn');
@@ -419,30 +419,41 @@ if (form) {
     formMsg.textContent     = '';
     formMsg.className       = 'form-msg';
 
-    const body = {
-      name:    (form.elements.name ? form.elements.name.value : '').trim(),
-      email:   (form.elements.email ? form.elements.email.value : '').trim(),
-      subject: (form.elements.subject ? form.elements.subject.value : '').trim(),
-      message: (form.elements.message ? form.elements.message.value : '').trim(),
-    };
+    const name    = (form.elements.name ? form.elements.name.value : '').trim();
+    const email   = (form.elements.email ? form.elements.email.value : '').trim();
+    const subject = (form.elements.subject ? form.elements.subject.value : '').trim();
+    const message = (form.elements.message ? form.elements.message.value : '').trim();
 
     try {
-      const res = await fetch('api/contact', {
+      const res = await fetch('https://formsubmit.co/ajax/adithyadesa556@gmail.com', {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(body),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          name: name,
+          email: email,
+          _subject: `[Portfolio Contact] ${subject}`,
+          message: message,
+          _template: 'table',
+          _captcha: 'false'
+        }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        formMsg.textContent = data.message;
-        formMsg.classList.add(data.success ? 'success' : 'error');
-        if (data.success) form.reset();
+      const data = await res.json();
+      if (data.success === 'true' || data.success === true) {
+        formMsg.textContent = 'Message sent! Adithya will get back to you soon.';
+        formMsg.classList.add('success');
+        form.reset();
+      } else if (data.message && data.message.toLowerCase().includes('activation')) {
+        formMsg.textContent = 'Form activation link sent to Adithya! Please check your Gmail to activate.';
+        formMsg.classList.add('success');
       } else {
-        throw new Error('Server returned ' + res.status);
+        throw new Error(data.message || 'Submission failed');
       }
     } catch {
-      formMsg.textContent = 'Message could not be sent directly via server. Please email adithyadesa556@gmail.com!';
+      formMsg.innerHTML = 'Could not send automatically. Please <a href="mailto:adithyadesa556@gmail.com?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(message) + '" style="color:var(--accent);text-decoration:underline;">click here to email directly</a>.';
       formMsg.classList.add('error');
     } finally {
       btnText.style.display   = 'inline';
